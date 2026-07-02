@@ -94,7 +94,7 @@ function writeReadme() {
 
 ## 包内包含
 
-- \`miu-kb/\`: 审核台、知识库、AI 队列、hook、worker、CLI 和 MCP server
+- \`miu-kb/\`: Mac App 后端 runtime、知识库、AI 队列、hook、worker、CLI 和 MCP server
 - \`data/pending.db\`: 待审核/已处理候选数据库快照
 - \`data/local.db\`: 长期记忆数据库快照
 - \`data/extractor-prompt.md\`: AI 提炼提示词（如果存在）
@@ -117,13 +117,7 @@ node install-on-mac.mjs --overwrite
 - 执行 \`npm install --omit=dev\` 安装本地依赖
 - 写入 Codex hooks
 - 写入 \`[mcp_servers.miu-kb]\`
-- 创建 LaunchAgent，默认启动网页端
-
-安装后打开：
-
-\`\`\`text
-http://127.0.0.1:17322/
-\`\`\`
+- 创建 LaunchAgent，供 Miu KB Mac App 自动连接本地服务
 
 说明：
 
