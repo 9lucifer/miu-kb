@@ -103,8 +103,9 @@ function uniqueValues(values) {
   return [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
 }
 
-function queryVariants(query) {
+function queryVariants(query, opts = {}) {
   const raw = String(query || "").trim();
+  if (opts.disableQueryVariants) return raw ? [raw] : [];
   const terms = meaningfulTerms(raw);
   const codeTerms = raw.match(/[a-zA-Z0-9_:/.-]{3,}/g) || [];
   return uniqueValues([
@@ -169,7 +170,8 @@ function rerankRows(rows, query, opts, limit) {
     .map((row) => {
       const matched = matchedTerms(row, terms);
       const coverage = matched.length / Math.max(1, Math.min(terms.length, 12));
-      const score = (row.rrf || 0) + coverage * 0.55 + rowScopeBoost(row, opts) + rowTagBoost(row, terms) + typeBoost(row);
+      const boosts = opts.disableBoosts ? 0 : rowScopeBoost(row, opts) + rowTagBoost(row, terms) + typeBoost(row);
+      const score = opts.disableRerank ? (row.rrf || 0) : (row.rrf || 0) + coverage * 0.55 + boosts;
       return {
         ...row,
         recall_score: Number(score.toFixed(4)),
@@ -183,8 +185,8 @@ function rerankRows(rows, query, opts, limit) {
   const topicCounts = new Map();
   for (const row of scored) {
     const topic = row.category || normalizeTags(row.tags)[0] || row.type || "default";
-    const repeatedTopic = (topicCounts.get(topic) || 0) >= 2;
-    const tooSimilar = selected.some((item) => termSimilarity(row, item) >= 0.72);
+    const repeatedTopic = !opts.disableDiversity && (topicCounts.get(topic) || 0) >= 2;
+    const tooSimilar = !opts.disableDiversity && selected.some((item) => termSimilarity(row, item) >= 0.72);
     if (repeatedTopic || tooSimilar) {
       skipped.push(row);
       continue;
@@ -427,7 +429,7 @@ export function openStore(dbPath = process.env.MIU_KB_DB || process.env.PKB_DB |
           m.updated_at DESC
         LIMIT ?
       `);
-      for (const [variantIndex, variant] of queryVariants(query).entries()) {
+      for (const [variantIndex, variant] of queryVariants(query, opts).entries()) {
         const match = ftsQuery(variant);
         if (!match) continue;
         const rows = stmt.all(

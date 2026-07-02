@@ -139,6 +139,14 @@ npm run check
 node bin/server.mjs
 ```
 
+评测召回效果：
+
+```bash
+miu-kb eval-recall --init-from-traces
+# 填写 eval/recall-golden.jsonl 里的 expected
+miu-kb eval-recall --golden eval/recall-golden.jsonl --limit 8
+```
+
 构建 SwiftUI App：
 
 ```bash

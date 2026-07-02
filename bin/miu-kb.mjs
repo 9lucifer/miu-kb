@@ -150,6 +150,7 @@ function usage() {
   miu-kb edit <id> [--content "..."] [--type fact|rule|decision|note] [--tags a,b]
   miu-kb search "query" [--limit 10] [--json]
   miu-kb recall "query" [--limit 8] [--json]
+  miu-kb eval-recall [--golden eval/recall-golden.jsonl] [--limit 8]
   miu-kb forget -- <id>
   miu-kb list [--all] [--limit 20]
   miu-kb stats
@@ -166,6 +167,12 @@ if (flags.version || cmd === "--version" || cmd === "version") {
 if (cmd === "serve" || cmd === "mcp") {
   const { serveMcp } = await import("../src/mcp.mjs");
   await serveMcp();
+} else if (cmd === "eval-recall") {
+  const result = spawnSync(process.execPath, [join(APP_DIR, "bin", "eval-recall.mjs"), ...process.argv.slice(3)], {
+    stdio: "inherit",
+    env: process.env,
+  });
+  process.exit(result.status ?? 1);
 } else if (!cmd) {
   usage();
   process.exit(0);

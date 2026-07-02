@@ -62,6 +62,29 @@ try {
   assert.ok(recalled.memories[0].recall_score > 0);
   assert.match(recalled.memories[0].recall_reason, /命中|当前项目/);
 
+  const goldenPath = join(dir, "recall-golden.jsonl");
+  writeFileSync(goldenPath, `${JSON.stringify({
+    query: "PPTX tab 制表位应该怎么处理",
+    expected: [fact.id],
+    scope: "project",
+    project_id: "parser_slide_sdk",
+  })}\n`);
+  const evalRecall = spawnSync(process.execPath, [
+    join(root, "bin", "eval-recall.mjs"),
+    "--golden",
+    goldenPath,
+    "--limit",
+    "3",
+    "--json",
+  ], {
+    encoding: "utf8",
+    env: { ...process.env, MIU_KB_DB: join(dir, "local.db") },
+  });
+  assert.equal(evalRecall.status, 0, evalRecall.stderr || evalRecall.stdout);
+  const evalReport = JSON.parse(evalRecall.stdout);
+  assert.equal(evalReport.variants.find((item) => item.name === "full").hitK, 1);
+  assert.ok(evalReport.variants.some((item) => item.name === "bm25"));
+
   assert.equal(store.forget(fact.id), true);
   assert.equal(store.search("显式 tab stop").length, 0);
   assert.equal(store.forget(noisy.id), true);
