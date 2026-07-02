@@ -3,7 +3,7 @@ import { createServer } from "node:http";
 import { spawn, spawnSync } from "node:child_process";
 import { appendFileSync, chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { DatabaseSync } from "../lib/sqlite-sync.mjs";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { URL } from "node:url";
 import {
   APP_DIR,
@@ -72,6 +72,7 @@ const MEMORY_HOOK_PATH = join(APP_DIR, "bin", "codex-memory-hook.sh");
 const USER_PROMPT_RECALL_PATH = join(APP_DIR, "bin", "user-prompt-recall.mjs");
 const STOP_ENQUEUE_PATH = join(APP_DIR, "bin", "stop-enqueue.mjs");
 const WORKER_PATH = join(APP_DIR, "bin", "worker.mjs");
+const EVAL_GOLDEN_PATH = join(DATA_DIR, "eval", "recall-golden.jsonl");
 const SELF_CHECK_CACHE_MS = 30000;
 const OVERVIEW_CACHE_MS = 15000;
 const BRANCH_LIFECYCLE_SCAN_MS = 60000;
@@ -1715,6 +1716,115 @@ function getRecallTraceState(params = {}) {
   } finally {
     db.close();
   }
+}
+
+function readJsonl(path) {
+  if (!existsSync(path)) return [];
+  return readFileSync(path, "utf8")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"))
+    .map((line) => readJsonMaybe(line))
+    .filter((row) => row && typeof row === "object");
+}
+
+function evalKey(item) {
+  return [item.query || "", item.scope || "", item.project_id || "", item.branch_name || ""].join("\u0001");
+}
+
+function compactEvalText(text, max = 220) {
+  const value = String(text || "").replace(/\s+/g, " ").trim();
+  return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
+}
+
+function traceCandidate(item) {
+  if (!item?.id) return null;
+  return {
+    id: item.id,
+    type: item.type || "note",
+    scope: item.scope || "global",
+    score: item.rank ?? null,
+    content: compactEvalText(item.content),
+  };
+}
+
+function getEvalRecallState(params = {}) {
+  const limit = clampInt(params.limit, 50, 1, 300);
+  const saved = new Map(readJsonl(EVAL_GOLDEN_PATH).map((item) => [evalKey(item), item]));
+  const db = openDb();
+  try {
+    const rows = db.prepare(`
+      SELECT query, cwd, branch_name, memories_json, rules_json, created_at
+      FROM recall_traces
+      WHERE status = 'ok'
+        AND COALESCE(query, '') != ''
+        AND COALESCE(session_id, '') != 'self-check'
+      ORDER BY created_at DESC
+      LIMIT ?
+    `).all(limit);
+    const items = rows.map((row) => {
+      const base = {
+        query: row.query,
+        expected: [],
+        scope: row.cwd ? "project" : undefined,
+        project_id: row.cwd || undefined,
+        branch_name: row.branch_name || undefined,
+      };
+      const existing = saved.get(evalKey(base));
+      return {
+        ...base,
+        expected: Array.isArray(existing?.expected) ? existing.expected : [],
+        candidates: [
+          ...readJsonMaybe(row.rules_json || "[]"),
+          ...readJsonMaybe(row.memories_json || "[]"),
+        ].map(traceCandidate).filter(Boolean).slice(0, 12),
+        created_at: row.created_at,
+      };
+    });
+    return { path: EVAL_GOLDEN_PATH, items };
+  } finally {
+    db.close();
+  }
+}
+
+function saveEvalRecallState(body = {}) {
+  const items = Array.isArray(body.items) ? body.items : [];
+  mkdirSync(dirname(EVAL_GOLDEN_PATH), { recursive: true });
+  const lines = items
+    .filter((item) => String(item.query || "").trim())
+    .map((item) => JSON.stringify({
+      query: String(item.query || "").trim(),
+      expected: Array.isArray(item.expected) ? item.expected.map(String).filter(Boolean) : [],
+      scope: item.scope || undefined,
+      project_id: item.project_id || undefined,
+      branch_name: item.branch_name || undefined,
+      candidates: Array.isArray(item.candidates) ? item.candidates : [],
+    }));
+  writeFileSync(EVAL_GOLDEN_PATH, `${lines.join("\n")}\n`, { mode: 0o600 });
+  return { path: EVAL_GOLDEN_PATH, saved: lines.length };
+}
+
+function runEvalRecall(body = {}) {
+  const limit = clampInt(body.limit, 8, 1, 50);
+  const result = spawnSync(NODE_BIN, [
+    "--no-warnings=ExperimentalWarning",
+    join(APP_DIR, "bin", "eval-recall.mjs"),
+    "--golden",
+    EVAL_GOLDEN_PATH,
+    "--limit",
+    String(limit),
+    "--json",
+  ], {
+    cwd: APP_DIR,
+    env: { ...process.env, MIU_KB_APP_DIR: APP_DIR, MIU_KB_DATA_DIR: DATA_DIR, MIU_KB_DB: MEMORIES_DB_PATH },
+    encoding: "utf8",
+    timeout: 30000,
+    maxBuffer: 1024 * 1024,
+  });
+  if (result.status !== 0 || result.error) {
+    return { error: "eval_failed", status: 500, detail: cleanProcessOutput(result.stderr || result.error?.message || result.stdout) };
+  }
+  return readJsonMaybe(result.stdout);
 }
 
 function cleanProcessOutput(text) {
@@ -5551,18 +5661,141 @@ transcript_path: \${esc(t.transcript_path || '')}\${t.error ? '\\n\\nerror:\\n' 
 </html>`;
 }
 
+function evalRecallHtml() {
+  const token = JSON.stringify(TOKEN);
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Miu KB 召回评测标注</title>
+  <style>
+    :root { color-scheme: light dark; --line:#d8dee8; --soft:#f5f7fb; --text:#111827; --muted:#6b7280; --brand:#2563eb; }
+    @media (prefers-color-scheme: dark) { :root { --line:#273244; --soft:#121826; --text:#e5e7eb; --muted:#9ca3af; --brand:#60a5fa; } body { background:#0b1020; } }
+    * { box-sizing: border-box; }
+    body { margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--text); background:var(--soft); }
+    header { position:sticky; top:0; z-index:2; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--line); background:color-mix(in srgb, var(--soft) 80%, white 20%); backdrop-filter: blur(18px); }
+    h1 { margin:0; font-size:20px; }
+    main { max-width:1180px; margin:0 auto; padding:20px 24px 48px; }
+    button, input { font:inherit; }
+    button { border:1px solid var(--line); border-radius:8px; padding:8px 12px; background:white; color:var(--text); cursor:pointer; }
+    button.primary { background:var(--brand); color:white; border-color:var(--brand); }
+    button:disabled { opacity:.55; cursor:not-allowed; }
+    .toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .toolbar input { width:82px; border:1px solid var(--line); border-radius:8px; padding:8px 10px; background:white; color:var(--text); }
+    .meta { margin:12px 0 18px; color:var(--muted); font-size:13px; word-break:break-all; }
+    .case { background:white; border:1px solid var(--line); border-radius:12px; padding:16px; margin:14px 0; box-shadow:0 8px 24px rgba(15,23,42,.04); }
+    .case-head { display:flex; gap:10px; justify-content:space-between; align-items:flex-start; }
+    .query { font-size:16px; font-weight:700; }
+    .pill { display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:999px; padding:2px 8px; color:var(--muted); font-size:12px; white-space:nowrap; }
+    .candidates { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:10px; margin-top:12px; }
+    label.candidate { display:block; border:1px solid var(--line); border-radius:10px; padding:12px; cursor:pointer; background:var(--soft); }
+    label.candidate.selected { border-color:var(--brand); box-shadow:0 0 0 2px color-mix(in srgb, var(--brand) 20%, transparent); }
+    .candidate-top { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+    .candidate-id { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; color:var(--muted); }
+    .candidate-content { white-space:pre-wrap; word-break:break-word; }
+    .empty { padding:40px; text-align:center; color:var(--muted); border:1px dashed var(--line); border-radius:12px; background:white; }
+    #report { white-space:pre; overflow:auto; background:#0f172a; color:#d1e7ff; border-radius:10px; padding:14px; margin-top:14px; display:none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Miu KB 召回评测标注</h1>
+      <div class="meta">勾选每个问题应该命中的记忆，保存后可直接跑消融评测。</div>
+    </div>
+    <div class="toolbar">
+      <span>条数</span><input id="limit" type="number" value="50" min="1" max="300">
+      <button id="reload">刷新</button>
+      <button id="save" class="primary">保存标注</button>
+      <button id="run">运行评测</button>
+    </div>
+  </header>
+  <main>
+    <div id="path" class="meta"></div>
+    <div id="list"></div>
+    <pre id="report"></pre>
+  </main>
+  <script>
+    const token = ${token};
+    let state = { items: [] };
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    async function api(path, options = {}) {
+      const joiner = path.includes('?') ? '&' : '?';
+      const res = await fetch(path + joiner + 'token=' + encodeURIComponent(token), { ...options, headers:{ 'content-type':'application/json', ...(options.headers || {}) } });
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!res.ok || data.error) throw new Error(data.detail || data.error || res.statusText);
+      return data;
+    }
+    function render() {
+      document.getElementById('path').textContent = state.path ? '保存路径：' + state.path : '';
+      const list = document.getElementById('list');
+      if (!state.items.length) { list.innerHTML = '<div class="empty">暂无 recall trace。先用几轮 Codex，再回来生成评测集。</div>'; return; }
+      list.innerHTML = state.items.map((item, i) => {
+        const expected = new Set(item.expected || []);
+        const candidates = (item.candidates || []).map((c) => {
+          const selected = expected.has(c.id);
+          return '<label class="candidate ' + (selected ? 'selected' : '') + '">' +
+            '<div class="candidate-top"><input type="checkbox" data-case="' + i + '" data-id="' + esc(c.id) + '" ' + (selected ? 'checked' : '') + '>' +
+            '<span class="pill">' + esc(c.type || 'note') + '</span><span class="pill">' + esc(c.scope || 'global') + '</span>' +
+            '<span class="candidate-id">' + esc(c.id) + '</span></div>' +
+            '<div class="candidate-content">' + esc(c.content || '') + '</div></label>';
+        }).join('');
+        return '<section class="case"><div class="case-head"><div class="query">' + esc(item.query) + '</div>' +
+          '<span class="pill">' + esc(item.branch_name || item.project_id || item.scope || 'global') + '</span></div>' +
+          '<div class="candidates">' + (candidates || '<div class="meta">没有候选记忆</div>') + '</div></section>';
+      }).join('');
+      list.querySelectorAll('input[type=checkbox]').forEach((box) => {
+        box.onchange = () => {
+          const item = state.items[Number(box.dataset.case)];
+          const set = new Set(item.expected || []);
+          if (box.checked) set.add(box.dataset.id); else set.delete(box.dataset.id);
+          item.expected = [...set];
+          box.closest('.candidate').classList.toggle('selected', box.checked);
+        };
+      });
+    }
+    async function load() {
+      state = await api('/api/eval-recall?limit=' + encodeURIComponent(document.getElementById('limit').value || '50'));
+      document.getElementById('report').style.display = 'none';
+      render();
+    }
+    async function save() {
+      const result = await api('/api/eval-recall', { method:'PUT', body:JSON.stringify({ items: state.items }) });
+      document.getElementById('path').textContent = '已保存 ' + result.saved + ' 条到：' + result.path;
+    }
+    async function run() {
+      await save();
+      const report = await api('/api/eval-recall/run', { method:'POST', body:JSON.stringify({ limit:8 }) });
+      const lines = ['variant             hit@1  hit@3  hit@K  recall@K  precision@K  mrr    avg_ms'];
+      for (const r of report.variants || []) lines.push(String(r.name).padEnd(19) + '  ' + r.hit1.toFixed(3) + '  ' + r.hit3.toFixed(3) + '  ' + r.hitK.toFixed(3) + '  ' + r.recallK.toFixed(3) + '     ' + r.precisionK.toFixed(3) + '      ' + r.mrr.toFixed(3) + '  ' + r.avgMs.toFixed(1));
+      const el = document.getElementById('report');
+      el.textContent = lines.join('\\n');
+      el.style.display = 'block';
+    }
+    document.getElementById('reload').onclick = load;
+    document.getElementById('save').onclick = () => save().catch(e => alert(e.message));
+    document.getElementById('run').onclick = () => run().catch(e => alert(e.message));
+    load().catch(e => { document.getElementById('list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  </script>
+</body>
+</html>`;
+}
+
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${HOST}:${PORT}`);
   PERF_META.set(res, { method: req.method || "GET", path: url.pathname, startedAt: process.hrtime.bigint() });
   res.once("finish", () => writePerfLog(res));
   try {
     if (url.pathname === "/health") return sendJson(res, { ok: true });
-    if (url.pathname === "/" && !isAuthorized(req, url)) {
-      res.writeHead(302, { location: `/?token=${encodeURIComponent(TOKEN)}` });
+    if ((url.pathname === "/" || url.pathname === "/eval-recall") && !isAuthorized(req, url)) {
+      res.writeHead(302, { location: `${url.pathname}?token=${encodeURIComponent(TOKEN)}` });
       return res.end();
     }
     if (!isAuthorized(req, url)) return sendJson(res, { error: "unauthorized" }, 401);
     if (url.pathname === "/") return sendHtml(res, html());
+    if (url.pathname === "/eval-recall") return sendHtml(res, evalRecallHtml());
     if (url.pathname === "/api/overview" && req.method === "GET") {
       return sendJson(res, getOverviewState({ force: url.searchParams.get("force") === "1" }));
     }
@@ -5612,6 +5845,16 @@ const server = createServer(async (req, res) => {
         pageSize: url.searchParams.get("pageSize") || "20",
         includeSelfCheck: url.searchParams.get("includeSelfCheck") || "0",
       }));
+    }
+    if (url.pathname === "/api/eval-recall" && req.method === "GET") {
+      return sendJson(res, getEvalRecallState({ limit: url.searchParams.get("limit") || "50" }));
+    }
+    if (url.pathname === "/api/eval-recall" && req.method === "PUT") {
+      return sendJson(res, saveEvalRecallState(await readBody(req)));
+    }
+    if (url.pathname === "/api/eval-recall/run" && req.method === "POST") {
+      const result = runEvalRecall(await readBody(req));
+      return result.error ? sendJson(res, result, result.status || 500) : sendJson(res, result);
     }
     if (url.pathname === "/api/ai/queue" && req.method === "GET") {
       return sendJson(res, getAiQueueState({

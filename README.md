@@ -147,6 +147,8 @@ miu-kb eval-recall --init-from-traces
 miu-kb eval-recall --golden eval/recall-golden.jsonl --limit 8
 ```
 
+也可以打开本地标注页辅助填写：`http://127.0.0.1:17322/eval-recall`。
+
 构建 SwiftUI App：
 
 ```bash
