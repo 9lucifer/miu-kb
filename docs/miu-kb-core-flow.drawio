@@ -1,185 +1,125 @@
 <mxfile host="app.diagrams.net" modified="2026-07-02T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
   <diagram id="miu-kb-core-flow" name="Miu KB Core Flow">
-    <mxGraphModel dx="1600" dy="980" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="980" math="0" shadow="0">
+    <mxGraphModel dx="1700" dy="960" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="960" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="title" value="Miu KB 核心流程&#xa;Mac App + 本地 runtime + Codex hooks / MCP" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1;fontColor=#111827;" vertex="1" parent="1">
-          <mxGeometry x="60" y="28" width="620" height="72" as="geometry" />
+
+        <mxCell id="title" value="Miu KB 核心流程" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=30;fontStyle=1;fontColor=#111827;" vertex="1" parent="1">
+          <mxGeometry x="60" y="36" width="360" height="42" as="geometry" />
         </mxCell>
-        <mxCell id="note" value="网页端不是产品入口；旧 HTML 仅内部调试 / 兼容，API 面向 Mac App。" style="rounded=1;whiteSpace=wrap;html=1;arcSize=14;fillColor=#F9FAFB;strokeColor=#E5E7EB;fontSize=14;fontColor=#4B5563;spacing=10;" vertex="1" parent="1">
-          <mxGeometry x="1210" y="34" width="400" height="54" as="geometry" />
+        <mxCell id="subtitle" value="Mac App 是用户入口；本地 API / hooks / MCP 负责把长期记忆接入 Codex。" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=15;fontColor=#4B5563;" vertex="1" parent="1">
+          <mxGeometry x="60" y="82" width="920" height="34" as="geometry" />
         </mxCell>
 
-        <mxCell id="lane-codex" value="Codex 侧" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#EFF6FF;strokeColor=#BFDBFE;fontStyle=1;fontSize=16;fontColor=#1D4ED8;verticalAlign=top;spacingTop=14;" vertex="1" parent="1">
-          <mxGeometry x="50" y="120" width="370" height="710" as="geometry" />
+        <mxCell id="row1" value="1. 提问前：召回注入" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#EFF6FF;strokeColor=#BFDBFE;fontSize=16;fontStyle=1;fontColor=#1D4ED8;align=left;verticalAlign=top;spacing=14;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="140" width="1600" height="150" as="geometry" />
         </mxCell>
-        <mxCell id="lane-runtime" value="miu-kb 本地 runtime" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFBEB;strokeColor=#FDE68A;fontStyle=1;fontSize=16;fontColor=#92400E;verticalAlign=top;spacingTop=14;" vertex="1" parent="1">
-          <mxGeometry x="460" y="120" width="520" height="710" as="geometry" />
+        <mxCell id="row2" value="2. 回答后：异步沉淀" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFBEB;strokeColor=#FDE68A;fontSize=16;fontStyle=1;fontColor=#92400E;align=left;verticalAlign=top;spacing=14;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="320" width="1600" height="150" as="geometry" />
         </mxCell>
-        <mxCell id="lane-storage" value="本地持久层" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#ECFDF5;strokeColor=#BBF7D0;fontStyle=1;fontSize=16;fontColor=#047857;verticalAlign=top;spacingTop=14;" vertex="1" parent="1">
-          <mxGeometry x="1020" y="120" width="300" height="710" as="geometry" />
+        <mxCell id="row3" value="3. 审核后：长期化" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#ECFDF5;strokeColor=#BBF7D0;fontSize=16;fontStyle=1;fontColor=#047857;align=left;verticalAlign=top;spacing=14;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="500" width="1600" height="150" as="geometry" />
         </mxCell>
-        <mxCell id="lane-app" value="Mac App 管理台" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F5F3FF;strokeColor=#DDD6FE;fontStyle=1;fontSize=16;fontColor=#6D28D9;verticalAlign=top;spacingTop=14;" vertex="1" parent="1">
-          <mxGeometry x="1360" y="120" width="290" height="710" as="geometry" />
-        </mxCell>
-
-        <mxCell id="codex" value="Codex App / CLI&#xa;用户会话" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FFFFFF;strokeColor=#60A5FA;fontSize=16;fontStyle=1;fontColor=#111827;spacing=10;shadow=0;" vertex="1" parent="1">
-          <mxGeometry x="90" y="180" width="280" height="72" as="geometry" />
-        </mxCell>
-        <mxCell id="prompt-hook" value="UserPromptSubmit hook&#xa;提问前阻塞执行" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#DBEAFE;strokeColor=#3B82F6;fontSize=14;fontColor=#1E3A8A;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="90" y="310" width="280" height="70" as="geometry" />
-        </mxCell>
-        <mxCell id="stop-hook" value="Stop hook&#xa;回答结束后异步沉淀" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;fontColor=#78350F;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="90" y="470" width="280" height="70" as="geometry" />
-        </mxCell>
-        <mxCell id="mcp-client" value="MCP 工具调用&#xa;get_context / add_memory" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#F5F3FF;strokeColor=#A78BFA;fontSize=14;fontColor=#4C1D95;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="90" y="640" width="280" height="76" as="geometry" />
+        <mxCell id="row4" value="4. 主动调用：MCP / CLI" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#F5F3FF;strokeColor=#DDD6FE;fontSize=16;fontStyle=1;fontColor=#6D28D9;align=left;verticalAlign=top;spacing=14;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="680" width="1600" height="150" as="geometry" />
         </mxCell>
 
-        <mxCell id="dispatcher" value="codex-memory-hook.sh&#xa;统一分发入口" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FFF7ED;strokeColor=#FDBA74;fontSize=15;fontStyle=1;fontColor=#7C2D12;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="510" y="245" width="220" height="78" as="geometry" />
+        <mxCell id="codexPrompt" value="Codex App / CLI&#xa;用户提交问题" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#3B82F6;fontSize=14;fontStyle=1;fontColor=#111827;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="120" y="190" width="200" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="recall" value="user-prompt-recall.mjs&#xa;检索并输出注入上下文" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#DBEAFE;strokeColor=#3B82F6;fontSize=14;fontColor=#1E3A8A;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="770" y="210" width="180" height="90" as="geometry" />
+        <mxCell id="promptHook" value="UserPromptSubmit hook" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#DBEAFE;strokeColor=#3B82F6;fontSize=14;fontColor=#1E3A8A;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="380" y="190" width="200" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="enqueue" value="stop-enqueue.mjs&#xa;保存 turn 并启动 worker" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;fontColor=#78350F;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="510" y="455" width="220" height="86" as="geometry" />
+        <mxCell id="recallScript" value="user-prompt-recall.mjs&#xa;按项目 / 分支召回" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#DBEAFE;strokeColor=#3B82F6;fontSize=14;fontColor=#1E3A8A;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="640" y="190" width="220" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="worker" value="worker.mjs&#xa;LLM 提炼 / AI 复核 / 去重" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FDE68A;strokeColor=#D97706;fontSize=14;fontColor=#78350F;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="770" y="455" width="180" height="94" as="geometry" />
+        <mxCell id="localRead" value="local.db&#xa;长期记忆 / FTS5" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DCFCE7;strokeColor=#22C55E;fontSize=13;fontColor=#064E3B;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="930" y="182" width="190" height="78" as="geometry" />
         </mxCell>
-        <mxCell id="llm" value="Codex CLI 模型&#xa;结构化 JSON 输出" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#F5F3FF;strokeColor=#A78BFA;fontSize=14;fontColor=#4C1D95;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="770" y="610" width="180" height="78" as="geometry" />
-        </mxCell>
-        <mxCell id="mcp-server" value="src/mcp.mjs&#xa;stdio MCP server" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#F5F3FF;strokeColor=#8B5CF6;fontSize=14;fontColor=#4C1D95;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="510" y="640" width="220" height="76" as="geometry" />
-        </mxCell>
-        <mxCell id="api" value="server.mjs&#xa;127.0.0.1:17322 + token" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FFF7ED;strokeColor=#FDBA74;fontSize=14;fontColor=#7C2D12;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="770" y="760" width="180" height="74" as="geometry" />
+        <mxCell id="injectContext" value="stdout 注入上下文&#xa;本轮 Codex 可见" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#3B82F6;fontSize=14;fontColor=#1E3A8A;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="190" width="220" height="62" as="geometry" />
         </mxCell>
 
-        <mxCell id="localdb" value="local.db&#xa;长期记忆 + FTS5 + 中文 bigram&#xa;只保存审核通过内容" style="shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DCFCE7;strokeColor=#22C55E;fontSize=13;fontColor=#064E3B;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="1060" y="205" width="220" height="105" as="geometry" />
+        <mxCell id="codexStop" value="Codex 回答结束" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#F59E0B;fontSize=14;fontStyle=1;fontColor=#111827;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="120" y="370" width="200" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="write-gate-note" value="写入门槛&#xa;人工 approve 或 AI 复核 approve" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FFFFFF;strokeColor=#86EFAC;fontSize=12;fontColor=#166534;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="1060" y="330" width="220" height="56" as="geometry" />
+        <mxCell id="stopHook" value="Stop hook" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;fontColor=#78350F;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="380" y="370" width="200" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="pendingdb" value="pending.db&#xa;turns / candidates / review_events&#xa;lifecycle_events / recall_traces" style="shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DCFCE7;strokeColor=#22C55E;fontSize=13;fontColor=#064E3B;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="1060" y="415" width="220" height="125" as="geometry" />
+        <mxCell id="enqueue" value="stop-enqueue.mjs&#xa;写 turn 队列" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;fontColor=#78350F;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="640" y="370" width="220" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="files" value="settings / prompts / logs&#xa;raw turn snapshots" style="shape=folder;fontStyle=1;tabWidth=90;tabHeight=18;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#F9FAFB;strokeColor=#9CA3AF;fontSize=13;fontColor=#374151;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="1060" y="630" width="220" height="90" as="geometry" />
+        <mxCell id="pendingQueue" value="pending.db&#xa;turns / raw snapshot" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DCFCE7;strokeColor=#22C55E;fontSize=13;fontColor=#064E3B;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="930" y="362" width="190" height="78" as="geometry" />
         </mxCell>
-
-        <mxCell id="mac-app" value="SwiftUI Mac App&#xa;唯一用户管理入口" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FFFFFF;strokeColor=#8B5CF6;fontSize=16;fontStyle=1;fontColor=#111827;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="1400" y="185" width="210" height="80" as="geometry" />
+        <mxCell id="worker" value="worker.mjs&#xa;LLM 提炼候选记忆" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FDE68A;strokeColor=#D97706;fontSize=14;fontColor=#78350F;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="370" width="220" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="review-ui" value="审核台 / AI 队列&#xa;人工审核或 AI 复核" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=14;fontColor=#78350F;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="1400" y="365" width="210" height="84" as="geometry" />
-        </mxCell>
-        <mxCell id="trace-ui" value="知识库 / 引用解释&#xa;生命周期与召回透明化" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#ECFDF5;strokeColor=#22C55E;fontSize=14;fontColor=#064E3B;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="1400" y="535" width="210" height="84" as="geometry" />
-        </mxCell>
-        <mxCell id="settings-ui" value="首次使用 / 自检 / 设置&#xa;注入、清除、卸载、模型配置" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#EEF2FF;strokeColor=#818CF8;fontSize=14;fontColor=#312E81;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="1400" y="700" width="210" height="88" as="geometry" />
+        <mxCell id="candidate" value="候选记忆&#xa;等待审核 / AI 复核" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#F59E0B;fontSize=14;fontColor=#78350F;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1460" y="370" width="150" height="62" as="geometry" />
         </mxCell>
 
-        <mxCell id="e1" value="提交 prompt" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#2563EB;fontSize=12;fontColor=#1E40AF;" edge="1" parent="1" source="codex" target="prompt-hook">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="macApp" value="SwiftUI Mac App&#xa;审核台 / 知识库 / 设置" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#8B5CF6;fontSize=14;fontStyle=1;fontColor=#111827;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="120" y="550" width="220" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="e2" value="hook payload" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#2563EB;fontSize=12;fontColor=#1E40AF;" edge="1" parent="1" source="prompt-hook" target="dispatcher">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="api" value="server.mjs&#xa;127.0.0.1:17322 + token" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFF7ED;strokeColor=#FDBA74;fontSize=14;fontColor=#7C2D12;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="420" y="550" width="230" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="e3" value="user-prompt" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#2563EB;fontSize=12;fontColor=#1E40AF;" edge="1" parent="1" source="dispatcher" target="recall">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="reviewPending" value="pending.db&#xa;candidates / review_events" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DCFCE7;strokeColor=#22C55E;fontSize=13;fontColor=#064E3B;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="730" y="542" width="210" height="78" as="geometry" />
         </mxCell>
-        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;fontColor=#166534;" edge="1" parent="1" source="recall" target="localdb">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="approveGate" value="人工 approve&#xa;或 AI 复核 approve" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontSize=13;fontColor=#78350F;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="532" width="150" height="98" as="geometry" />
         </mxCell>
-        <mxCell id="e5" value="stdout 注入上下文" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#2563EB;fontSize=12;fontColor=#1E40AF;dashed=1;" edge="1" parent="1" source="recall" target="codex">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="860" y="160" />
-              <mxPoint x="230" y="160" />
-            </Array>
-          </mxGeometry>
+        <mxCell id="localWrite" value="local.db&#xa;写入长期记忆" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DCFCE7;strokeColor=#22C55E;fontSize=13;fontColor=#064E3B;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="542" width="190" height="78" as="geometry" />
         </mxCell>
-        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;fontColor=#166534;" edge="1" parent="1" source="recall" target="pendingdb">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="trace" value="lifecycle_events&#xa;recall_traces 可审计" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#22C55E;fontSize=13;fontColor=#064E3B;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="550" width="130" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D97706;fontSize=12;fontColor=#92400E;exitX=0;exitY=0.5;entryX=0;entryY=0.5;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="codex" target="stop-hook">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="55" y="216" />
-              <mxPoint x="55" y="505" />
-            </Array>
-          </mxGeometry>
+
+        <mxCell id="codexMcp" value="Codex 主动调用" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#8B5CF6;fontSize=14;fontStyle=1;fontColor=#111827;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="120" y="730" width="200" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="e8" value="stop" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D97706;fontSize=12;fontColor=#92400E;" edge="1" parent="1" source="stop-hook" target="enqueue">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="mcpServer" value="src/mcp.mjs&#xa;get_context / search / add / edit / forget" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F5F3FF;strokeColor=#8B5CF6;fontSize=14;fontColor=#4C1D95;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="420" y="730" width="260" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;fontColor=#166534;" edge="1" parent="1" source="enqueue" target="pendingdb">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1010" y="420" />
-            </Array>
-          </mxGeometry>
+        <mxCell id="storeApi" value="src/store.mjs&#xa;SQLite + FTS5 + bigram" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#ECFDF5;strokeColor=#22C55E;fontSize=14;fontColor=#064E3B;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="780" y="730" width="230" height="62" as="geometry" />
         </mxCell>
-        <mxCell id="e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D97706;fontSize=12;fontColor=#92400E;" edge="1" parent="1" source="enqueue" target="worker">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="localMcp" value="local.db&#xa;同一个长期记忆库" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DCFCE7;strokeColor=#22C55E;fontSize=13;fontColor=#064E3B;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="722" width="190" height="78" as="geometry" />
         </mxCell>
-        <mxCell id="e11" value="prompt + schema" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7C3AED;fontSize=12;fontColor=#5B21B6;" edge="1" parent="1" source="worker" target="llm">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="settings" value="settings / prompts / logs&#xa;由 Mac App 设置页管理" style="shape=folder;tabWidth=80;tabHeight=18;tabPosition=left;whiteSpace=wrap;html=1;fillColor=#F9FAFB;strokeColor=#9CA3AF;fontSize=13;fontColor=#374151;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1380" y="730" width="230" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="e12" value="候选 / 决策 JSON" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7C3AED;fontSize=12;fontColor=#5B21B6;dashed=1;" edge="1" parent="1" source="llm" target="worker">
-          <mxGeometry relative="1" as="geometry" />
+
+        <mxCell id="note" value="说明：图中 local.db / pending.db 按读写视角重复出现，物理文件仍分别是 ~/.config/miu-kb/local.db 和 pending.db。" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#F9FAFB;strokeColor=#E5E7EB;fontSize=13;fontColor=#4B5563;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="860" width="1580" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="e13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;fontColor=#166534;" edge="1" parent="1" source="worker" target="pendingdb">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;fontColor=#166534;dashed=1;" edge="1" parent="1" source="worker" target="localdb">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e15" value="MCP request" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7C3AED;fontSize=12;fontColor=#5B21B6;" edge="1" parent="1" source="mcp-client" target="mcp-server">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;fontColor=#166534;" edge="1" parent="1" source="mcp-server" target="localdb">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1000" y="678" />
-              <mxPoint x="1000" y="260" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e17" value="token API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7C3AED;fontSize=12;fontColor=#5B21B6;exitX=0;exitY=0.5;entryX=1;entryY=0.5;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="mac-app" target="api">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1338" y="225" />
-              <mxPoint x="1338" y="797" />
-              <mxPoint x="950" y="797" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;fontColor=#166534;" edge="1" parent="1" source="api" target="pendingdb">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1010" y="797" />
-              <mxPoint x="1010" y="478" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;fontColor=#166534;" edge="1" parent="1" source="api" target="localdb">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="990" y="797" />
-              <mxPoint x="990" y="258" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#6B7280;fontSize=12;fontColor=#4B5563;" edge="1" parent="1" source="api" target="files">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
+
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#2563EB;" edge="1" parent="1" source="codexPrompt" target="promptHook"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#2563EB;" edge="1" parent="1" source="promptHook" target="recallScript"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;" edge="1" parent="1" source="recallScript" target="localRead"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#2563EB;dashed=1;" edge="1" parent="1" source="localRead" target="injectContext"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D97706;" edge="1" parent="1" source="codexStop" target="stopHook"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D97706;" edge="1" parent="1" source="stopHook" target="enqueue"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;" edge="1" parent="1" source="enqueue" target="pendingQueue"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D97706;" edge="1" parent="1" source="pendingQueue" target="worker"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D97706;" edge="1" parent="1" source="worker" target="candidate"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7C3AED;" edge="1" parent="1" source="macApp" target="api"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;" edge="1" parent="1" source="api" target="reviewPending"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D97706;" edge="1" parent="1" source="reviewPending" target="approveGate"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e13" value="通过" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;fontSize=12;fontColor=#166534;" edge="1" parent="1" source="approveGate" target="localWrite"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;" edge="1" parent="1" source="localWrite" target="trace"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="e15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7C3AED;" edge="1" parent="1" source="codexMcp" target="mcpServer"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;" edge="1" parent="1" source="mcpServer" target="storeApi"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#16A34A;" edge="1" parent="1" source="storeApi" target="localMcp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#6B7280;dashed=1;" edge="1" parent="1" source="localMcp" target="settings"><mxGeometry relative="1" as="geometry" /></mxCell>
       </root>
     </mxGraphModel>
   </diagram>
