@@ -1,0 +1,30 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.codex/miu-kb/bin/codex-memory-hook.sh\" user-prompt",
+            "blocking": true,
+            "timeout": 10,
+            "statusMessage": "读取 Miu KB 记忆..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.codex/miu-kb/bin/codex-memory-hook.sh\" stop",
+            "blocking": true,
+            "timeout": 20,
+            "statusMessage": "沉淀 Miu KB 记忆..."
+          }
+        ]
+      }
+    ]
+  }
+}

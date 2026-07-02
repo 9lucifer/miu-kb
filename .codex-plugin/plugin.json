@@ -1,0 +1,34 @@
+{
+  "name": "miu-kb",
+  "version": "0.1.0",
+  "description": "Local persistent memory, recall hooks, async extraction, and review UI for Codex.",
+  "author": {
+    "name": "Miu KB"
+  },
+  "license": "UNLICENSED",
+  "homepage": "https://127.0.0.1:17322",
+  "keywords": [
+    "memory",
+    "codex",
+    "knowledge-base",
+    "local-first"
+  ],
+  "hooks": "./hooks/miu-kb-hooks.json",
+  "interface": {
+    "displayName": "Miu KB",
+    "shortDescription": "本地持久记忆与 Codex hook 增强。",
+    "longDescription": "为 Codex 提供本地知识检索、前置记忆注入、后置异步提炼、审核台和知识库管理。",
+    "developerName": "Miu KB",
+    "category": "Productivity",
+    "capabilities": [
+      "Lifecycle hooks",
+      "MCP",
+      "Local storage"
+    ],
+    "defaultPrompt": [
+      "检查 miu-kb 记忆 hook 是否生效。",
+      "打开 miu-kb 审核台。",
+      "搜索本地持久记忆。"
+    ]
+  }
+}

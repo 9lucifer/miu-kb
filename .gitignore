@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+.env
+*.log
+tmp/
+data/
+*.db
+*.db-shm
+*.db-wal
+MiuKbMac/.build/
+MiuKbMac/dist/

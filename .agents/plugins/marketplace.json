@@ -1,0 +1,29 @@
+{
+  "$schema": "https://anthropic.com/agent-sdk/marketplace.schema.json",
+  "name": "miu-kb",
+  "description": "Miu KB local persistent memory for Codex.",
+  "interface": {
+    "displayName": "Miu KB"
+  },
+  "plugins": [
+    {
+      "name": "miu-kb",
+      "description": "Local persistent memory, recall hooks, async extraction, and review UI for Codex.",
+      "source": {
+        "source": "local",
+        "path": "."
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity",
+      "tags": [
+        "memory",
+        "codex",
+        "knowledge-base",
+        "local-first"
+      ]
+    }
+  ]
+}

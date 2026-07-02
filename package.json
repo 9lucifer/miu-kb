@@ -1,0 +1,20 @@
+{
+  "name": "miu-kb",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "miu-kb": "./bin/miu-kb.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "check": "node test/check.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "better-sqlite3": "^11.10.0",
+    "stopwords-zh": "^0.4.0"
+  }
+}

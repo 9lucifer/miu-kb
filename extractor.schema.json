@@ -1,0 +1,96 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["candidates"],
+  "properties": {
+    "candidates": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "target_kind",
+          "target_id",
+          "target_status",
+          "target_content",
+          "type",
+          "scope",
+          "content",
+          "tags",
+          "category",
+          "rationale",
+          "evidence",
+          "confidence",
+          "sensitivity"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["create_new", "update_existing", "skip_duplicate", "merge_pending"]
+          },
+          "target_kind": {
+            "type": ["string", "null"],
+            "enum": ["review_candidate", "stored_memory", null]
+          },
+          "target_id": {
+            "type": ["string", "null"],
+            "maxLength": 120
+          },
+          "target_status": {
+            "type": ["string", "null"],
+            "maxLength": 40
+          },
+          "target_content": {
+            "type": ["string", "null"],
+            "maxLength": 1000
+          },
+          "type": {
+            "type": "string",
+            "enum": ["rule", "decision", "fact", "note"]
+          },
+          "scope": {
+            "type": "string",
+            "enum": ["global", "project", "branch"]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 1000
+          },
+          "tags": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
+          },
+          "category": {
+            "type": ["string", "null"],
+            "maxLength": 60
+          },
+          "rationale": {
+            "type": "string",
+            "maxLength": 400
+          },
+          "evidence": {
+            "type": "string",
+            "maxLength": 1200
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "sensitivity": {
+            "type": "string",
+            "enum": ["normal", "sensitive"]
+          }
+        }
+      }
+    }
+  }
+}
