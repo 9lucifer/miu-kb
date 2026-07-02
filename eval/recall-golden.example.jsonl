@@ -1,2 +1,2 @@
-{"query":"PPTX tab 制表位应该怎么处理","expected":["mem_xxx"],"scope":"project","project_id":"parser_slide_sdk","branch_name":null}
-{"query":"Miu KB hook 没生效要检查什么","expected":["mem_yyy"],"scope":"project","project_id":"/Users/bytedance/workSpace/ai_study","branch_name":null}
+{"query":"PPTX tab 制表位应该怎么处理","expected":["mem_xxx"],"scope":"project","project_id":"parser_slide_sdk","candidates":[{"id":"mem_xxx","type":"fact","scope":"project","score":0.81,"content":"parser_slide_sdk 的 PPTX tab 对齐语义要区分默认制表间距和显式 tab stop"}]}
+{"query":"Miu KB hook 没生效要检查什么","expected":["mem_yyy"],"scope":"project","project_id":"/Users/bytedance/workSpace/ai_study","candidates":[{"id":"mem_yyy","type":"fact","scope":"project","score":0.74,"content":"Miu KB 自检页可检查 hooks、MCP、CLI、Node、日志和模型调用是否正常"}]}

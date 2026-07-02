@@ -137,6 +137,11 @@ function printReport(report) {
   }
 }
 
+function compactText(text, max = 180) {
+  const value = String(text || "").replace(/\s+/g, " ").trim();
+  return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
+}
+
 function initFromTraces(path, limit) {
   const db = openDb();
   try {
@@ -154,7 +159,13 @@ function initFromTraces(path, limit) {
       const candidates = [
         ...readJsonMaybe(row.rules_json || "[]"),
         ...readJsonMaybe(row.memories_json || "[]"),
-      ].map((item) => item.id).filter(Boolean).slice(0, 12);
+      ].filter((item) => item?.id).slice(0, 12).map((item) => ({
+        id: item.id,
+        type: item.type,
+        scope: item.scope,
+        score: item.rank ?? null,
+        content: compactText(item.content),
+      }));
       return JSON.stringify({
         query: row.query,
         expected: [],
