@@ -2036,16 +2036,23 @@ struct SettingsView: View {
                 }
 
                 SettingsSection(title: "AI", footer: model.aiSettings?.path ?? "") {
-                    HStack {
-                        Picker("模型", selection: $modelName) {
-                            ForEach(model.aiSettings?.modelOptions ?? [modelName], id: \.self) { Text($0).tag($0) }
-                        }
-                        Picker("Reasoning", selection: $reasoningEffort) {
-                            ForEach(["off", "low", "medium", "high"], id: \.self) { Text($0).tag($0) }
-                        }
-                    }
-                    .labelsHidden()
                     SettingsGrid {
+                        VStack(alignment: .leading) {
+                            Text("模型").font(.caption).foregroundStyle(.secondary)
+                            Picker("模型", selection: $modelName) {
+                                ForEach(model.aiSettings?.modelOptions ?? [modelName], id: \.self) { Text($0).tag($0) }
+                            }
+                            .labelsHidden()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        VStack(alignment: .leading) {
+                            Text("推理强度").font(.caption).foregroundStyle(.secondary)
+                            Picker("推理强度", selection: $reasoningEffort) {
+                                ForEach(["off", "low", "medium", "high"], id: \.self) { Text($0).tag($0) }
+                            }
+                            .labelsHidden()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                         SettingField("每轮候选", text: $maxCandidates)
                         SettingField("重复阈值", text: $duplicateThreshold)
                         SettingField("主题重复阈值", text: $topicDuplicateThreshold)
@@ -2055,7 +2062,9 @@ struct SettingsView: View {
                         SettingField("上下文总长度", text: $relatedTotalChars)
                         SettingField("LLM 超时秒数", text: $timeoutSeconds)
                     }
+                    Divider().padding(.vertical, 4)
                     HStack {
+                        Spacer()
                         Button("保存设置") { Task { await model.saveSettings(currentSettings) } }
                             .buttonStyle(.borderedProminent)
                         Button("恢复默认设置") { Task { await model.resetSettings() } }
@@ -2575,7 +2584,7 @@ struct SettingsGrid<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        LazyVGrid(columns: [.init(.adaptive(minimum: 180), spacing: 12)], spacing: 12) {
+        LazyVGrid(columns: [.init(.adaptive(minimum: 220), spacing: 14)], spacing: 14) {
             content
         }
     }
