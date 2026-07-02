@@ -1,5 +1,13 @@
 # Miu KB
 
+<p>
+  <img alt="macOS SwiftUI" src="https://img.shields.io/badge/macOS-SwiftUI-111827?style=flat-square&logo=apple&logoColor=white">
+  <img alt="Codex hooks and MCP" src="https://img.shields.io/badge/Codex-hooks%20%2B%20MCP-2563eb?style=flat-square">
+  <img alt="Local SQLite" src="https://img.shields.io/badge/storage-SQLite-0f766e?style=flat-square&logo=sqlite&logoColor=white">
+  <img alt="Node 18 to 24" src="https://img.shields.io/badge/node-18--24-16a34a?style=flat-square&logo=nodedotjs&logoColor=white">
+  <img alt="Local first" src="https://img.shields.io/badge/privacy-local--first-7c3aed?style=flat-square">
+</p>
+
 给 Codex App 和 Codex CLI 使用的本地持久记忆系统。
 
 Miu KB 会在每轮 Codex 对话前检索本地知识库并注入相关上下文，在对话结束后异步提炼候选记忆，再通过原生 macOS App 让用户审核、合并、拒绝、删除和追踪生命周期。
@@ -18,12 +26,14 @@ Miu KB 会在每轮 Codex 对话前检索本地知识库并注入相关上下文
 
 ## 核心能力
 
-- **本地优先**：长期记忆、候选队列、生命周期审计都存储在本机 SQLite。
-- **Codex 集成**：接入 `UserPromptSubmit` 和 `Stop` hooks，同时提供 MCP 工具。
-- **人审闭环**：AI 只负责提炼和建议，最终写入、合并、拒绝由用户控制。
-- **范围管理**：支持全局、项目、分支三级记忆，避免临时分支知识污染全局。
-- **可审计**：候选、写入、合并、删除、恢复、归档都有生命周期记录。
-- **可观测**：自检页覆盖 hooks、MCP、CLI、Node、模型调用、日志和性能日志。
+| 能力 | 标签 | 说明 |
+| --- | --- | --- |
+| 本地优先 | `SQLite` `local-first` | 长期记忆、候选队列、生命周期审计都存储在本机 |
+| Codex 集成 | `hooks` `MCP` | 接入 `UserPromptSubmit` 和 `Stop` hooks，同时提供 MCP 工具 |
+| 人审闭环 | `review` `approval` | AI 只负责提炼和建议，最终写入、合并、拒绝由用户控制 |
+| 范围管理 | `global` `project` `branch` | 支持全局、项目、分支三级记忆，避免临时分支知识污染全局 |
+| 可审计 | `trace` `lifecycle` | 候选、写入、合并、删除、恢复、归档都有生命周期记录 |
+| 可观测 | `self-check` `logs` | 自检页覆盖 hooks、MCP、CLI、Node、模型调用、日志和性能日志 |
 
 ## 快速开始
 
