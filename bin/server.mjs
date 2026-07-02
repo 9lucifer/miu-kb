@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createServer } from "node:http";
 import { spawn, spawnSync } from "node:child_process";
-import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { DatabaseSync } from "../lib/sqlite-sync.mjs";
 import { join, resolve } from "node:path";
 import { URL } from "node:url";
@@ -13,6 +13,7 @@ import {
   DATA_DIR,
   DEFAULT_PORT,
   EXTRACTOR_PROMPT_PATH,
+  LOG_DIR,
   MEMORIES_BIN,
   MEMORIES_DB_PATH,
   NODE_BIN,
@@ -78,13 +79,49 @@ let selfCheckCache = null;
 let overviewCache = null;
 let branchLifecycleScanCache = null;
 let selfCheckInFlight = null;
+const PERF_LOG_PATH = join(LOG_DIR, "perf.log");
+const PERF_META = new WeakMap();
+
+function responseItemCount(value) {
+  if (Array.isArray(value)) return value.length;
+  if (!value || typeof value !== "object") return null;
+  for (const key of ["candidates", "memories", "traces", "turns", "results", "events", "checks"]) {
+    if (Array.isArray(value[key])) return value[key].length;
+  }
+  return null;
+}
+
+function writePerfLog(res) {
+  const meta = PERF_META.get(res);
+  if (!meta || !meta.path.startsWith("/api/")) return;
+  const took_ms = Number(process.hrtime.bigint() - meta.startedAt) / 1e6;
+  try {
+    appendFileSync(PERF_LOG_PATH, `${JSON.stringify({
+      ts: new Date().toISOString(),
+      method: meta.method,
+      path: meta.path,
+      status: res.statusCode,
+      took_ms: Number(took_ms.toFixed(1)),
+      json_bytes: meta.jsonBytes ?? 0,
+      items: meta.items,
+    })}\n`);
+  } catch {
+    // Perf logging must never break the local API.
+  }
+}
 
 function sendJson(res, value, status = 200) {
+  const json = JSON.stringify(value);
+  const meta = PERF_META.get(res);
+  if (meta) {
+    meta.jsonBytes = Buffer.byteLength(json);
+    meta.items = responseItemCount(value);
+  }
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
   });
-  res.end(JSON.stringify(value));
+  res.end(json);
 }
 
 function sendHtml(res, html) {
@@ -5516,6 +5553,8 @@ transcript_path: \${esc(t.transcript_path || '')}\${t.error ? '\\n\\nerror:\\n' 
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${HOST}:${PORT}`);
+  PERF_META.set(res, { method: req.method || "GET", path: url.pathname, startedAt: process.hrtime.bigint() });
+  res.once("finish", () => writePerfLog(res));
   try {
     if (url.pathname === "/health") return sendJson(res, { ok: true });
     if (url.pathname === "/" && !isAuthorized(req, url)) {
