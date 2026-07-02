@@ -15,6 +15,7 @@ import {
   actualScopeForPath,
   branchNameFromTags,
   branchTagFor,
+  demoteMergeDependents,
   ensureDirs,
   getGitBranchName,
   projectIdForCwd,
@@ -23,6 +24,7 @@ import {
   parseTags,
   readMemorySettings,
   readJsonMaybe,
+  repairInvalidMergeCandidates,
   safeJson,
   stringifyTags,
   stripBranchTags,
@@ -1139,6 +1141,7 @@ function rejectCandidateByAi(db, row, decision) {
     ai_reason: decision.reason,
     ai_confidence: decision.confidence,
   });
+  demoteMergeDependents(db, row.id, "目标候选被 AI 拒绝，自动改为新建记忆。");
   return { candidate_id: row.id, action: "reject", reason: decision.reason };
 }
 
@@ -1241,6 +1244,7 @@ function approveCandidateByAi(db, row, decision) {
 }
 
 function processPendingReviewTurn(db, turn, payload) {
+  repairInvalidMergeCandidates(db);
   const rows = pendingCandidateRowsByIds(db, payload.candidate_ids);
   const llm = reviewPendingCandidatesWithLlm(rows, payload);
   if (!llm.ok) throw new Error(llm.error || "AI review failed");

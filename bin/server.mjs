@@ -20,6 +20,7 @@ import {
   actualScopeForPath,
   branchNameFromTags,
   branchTagFor,
+  demoteMergeDependents,
   ensureDirs,
   getGitBranchName,
   getToken,
@@ -28,6 +29,7 @@ import {
   parseTags,
   readJsonMaybe,
   readMemorySettings,
+  repairInvalidMergeCandidates,
   rowToCandidate,
   safeJson,
   stripBranchTags,
@@ -212,6 +214,7 @@ function getState(params = {}) {
   const offset = (page - 1) * pageSize;
   const query = String(params.q ?? "").trim();
   const db = openDb();
+  repairInvalidMergeCandidates(db);
   const where = [];
   const args = [];
   if (status !== "all") {
@@ -1401,6 +1404,7 @@ function getOverviewState({ force = false } = {}) {
   }
   const db = openDb();
   try {
+    repairInvalidMergeCandidates(db);
     const candidateCounts = countRowsBy(db.prepare(`
       SELECT status, count(*) AS count
       FROM candidates
@@ -1869,6 +1873,7 @@ function archiveBranchMemory(db, candidate, reason) {
     before: { candidate: beforeCandidate, memory: beforeMemory },
     after: { candidate: afterCandidate, memory: afterMemory, output },
   });
+  demoteMergeDependents(db, candidate.id, "目标候选被归档，自动改为新建记忆。");
   return { action: "archived", candidate_id: candidate.id, memory_id: candidate.approved_memory_id, branch_name: candidate.branch_name };
 }
 
@@ -2122,10 +2127,19 @@ function mergePendingCandidate(source) {
 }
 
 function approveCandidate(id, body) {
-  const edited = updateCandidate(id, body);
+  let edited = updateCandidate(id, body);
   if (!edited) return { error: "candidate_not_found", status: 404 };
   if (edited.sensitivity === "sensitive") {
     return { error: "sensitive_candidate_requires_manual_cleanup", status: 400 };
+  }
+  if (edited.memory_action === "merge_pending") {
+    const db = openDb();
+    try {
+      repairInvalidMergeCandidates(db);
+      edited = rowToCandidate(getCandidate(db, id));
+    } finally {
+      db.close();
+    }
   }
 
   let memoryAction = edited.memory_action || "create_new";
@@ -2238,6 +2252,7 @@ function rejectCandidate(id) {
     INSERT INTO review_events (id, candidate_id, action, before_json, after_json)
     VALUES (?, ?, 'reject', ?, ?)
   `).run(nowId("evt"), id, JSON.stringify(before), JSON.stringify(after));
+  demoteMergeDependents(db, id, "目标候选被拒绝，自动改为新建记忆。");
   db.close();
   return rowToCandidate(after);
 }
@@ -2257,6 +2272,7 @@ function deleteRejectedCandidates() {
       INSERT INTO review_events (id, candidate_id, action, before_json, after_json)
       VALUES (?, ?, 'delete_rejected', ?, ?)
     `).run(nowId("evt"), before.id, JSON.stringify(before), JSON.stringify(after));
+    demoteMergeDependents(db, before.id, "目标候选被删除，自动改为新建记忆。");
   }
   db.close();
   return { ok: true, deletedCount: rows.length };
@@ -2284,6 +2300,7 @@ function enqueuePendingAiReview(body = {}) {
 
   const db = openDb();
   try {
+    repairInvalidMergeCandidates(db);
     const placeholders = ids.map(() => "?").join(",");
     const rows = db.prepare(`
       SELECT c.id, c.project_path, t.cwd
@@ -2419,6 +2436,7 @@ function deleteApprovedMemory(id) {
     before: { candidate: beforeUpdate, memory: beforeStoredMemory },
     after: { candidate: after, memory: getStoredMemory(before.approved_memory_id), output },
   });
+  demoteMergeDependents(nextDb, id, "目标候选对应的记忆被删除，自动改为新建记忆。");
   nextDb.close();
   return { candidate: rowToCandidate(after), output };
 }

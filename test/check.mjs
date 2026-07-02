@@ -10,7 +10,12 @@ const dir = mkdtempSync(join(tmpdir(), "miu-kb-"));
 process.env.MIU_KB_DATA_DIR = join(dir, "data");
 const store = openStore(join(dir, "local.db"));
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const { AI_REVIEW_PROMPT_PATH } = await import("../lib/core.mjs");
+const {
+  AI_REVIEW_PROMPT_PATH,
+  demoteMergeDependents,
+  openDb,
+  repairInvalidMergeCandidates,
+} = await import("../lib/core.mjs");
 const { DEFAULT_AI_REVIEW_PROMPT, getAiReviewPromptText } = await import("../bin/worker.mjs");
 
 try {
@@ -114,6 +119,36 @@ try {
   assert.equal(existsSync(join(installHome, ".codex", "miu-kb", "MiuKbMac", "dist")), false);
   assert.equal(existsSync(join(installHome, ".codex", "miu-kb", "node_modules")), false);
   assert.equal(existsSync(join(installHome, ".local", "bin", "miu-kb")), true);
+
+  const reviewDb = openDb();
+  try {
+    reviewDb.prepare("INSERT INTO turns (id, status) VALUES (?, ?)").run("turn_state", "processed");
+    reviewDb.prepare(`
+      INSERT INTO candidates (id, turn_id, content, status, memory_action)
+      VALUES (?, ?, ?, ?, ?)
+    `).run("target_rejected", "turn_state", "old target", "rejected", "create_new");
+    reviewDb.prepare(`
+      INSERT INTO candidates (id, turn_id, content, status, memory_action, target_kind, target_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run("source_merge", "turn_state", "new source", "pending", "merge_pending", "review_candidate", "target_rejected");
+    assert.equal(repairInvalidMergeCandidates(reviewDb), 1);
+    const repaired = reviewDb.prepare("SELECT memory_action, target_id FROM candidates WHERE id = ?").get("source_merge");
+    assert.deepEqual(repaired, { memory_action: "create_new", target_id: null });
+
+    reviewDb.prepare(`
+      INSERT INTO candidates (id, turn_id, content, status, memory_action)
+      VALUES (?, ?, ?, ?, ?)
+    `).run("target_later", "turn_state", "later target", "pending", "create_new");
+    reviewDb.prepare(`
+      INSERT INTO candidates (id, turn_id, content, status, memory_action, target_kind, target_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run("source_later", "turn_state", "later source", "pending", "merge_pending", "review_candidate", "target_later");
+    assert.equal(demoteMergeDependents(reviewDb, "target_later"), 1);
+    const demoted = reviewDb.prepare("SELECT memory_action, target_kind, target_id FROM candidates WHERE id = ?").get("source_later");
+    assert.deepEqual(demoted, { memory_action: "create_new", target_kind: null, target_id: null });
+  } finally {
+    reviewDb.close();
+  }
 } finally {
   store.close();
   rmSync(dir, { recursive: true, force: true });
