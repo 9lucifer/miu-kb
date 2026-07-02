@@ -34,6 +34,12 @@ swift build -c release
 ~/.config/miu-kb/pending.db
 ```
 
+## 技术文档
+
+- 技术细节：`docs/technical-details.md`
+- 核心流程图：`docs/miu-kb-core-flow.drawio`
+- PNG 预览：`docs/miu-kb-core-flow.png`
+
 ## CLI
 
 ```bash
