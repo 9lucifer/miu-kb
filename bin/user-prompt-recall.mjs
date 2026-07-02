@@ -79,16 +79,17 @@ function normalizeItems(items, branchName) {
     const key = content.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
+    const score = Number(item?.recall_score ?? item?.rank);
     normalized.push({
       id: compactWhitespace(item?.id),
       type: compactWhitespace(item?.type || "note"),
       scope: itemBranchName ? "branch" : compactWhitespace(item?.scope || "global"),
       branch_name: itemBranchName,
       tags: visibleTags.join(","),
-      rank: Number.isFinite(Number(item?.rank)) ? Number(item.rank) : null,
-      reason: Number.isFinite(Number(item?.rank))
+      rank: Number.isFinite(score) ? score : null,
+      reason: compactWhitespace(item?.recall_reason) || (Number.isFinite(score)
         ? "内容检索命中，按 FTS/BM25 排序，并通过范围/分支过滤"
-        : "固定规则命中，并通过范围/分支过滤",
+        : "固定规则命中，并通过范围/分支过滤"),
       content,
     });
   }

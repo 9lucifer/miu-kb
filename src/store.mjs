@@ -99,6 +99,103 @@ function hasMeaningfulOverlap(row, terms) {
   return terms.some((term) => haystack.includes(term));
 }
 
+function uniqueValues(values) {
+  return [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
+}
+
+function queryVariants(query) {
+  const raw = String(query || "").trim();
+  const terms = meaningfulTerms(raw);
+  const codeTerms = raw.match(/[a-zA-Z0-9_:/.-]{3,}/g) || [];
+  return uniqueValues([
+    raw,
+    terms.slice(0, 24).join(" "),
+    codeTerms.join(" "),
+    terms.filter((term) => /[a-z0-9_:/.-]{3,}/.test(term)).join(" "),
+  ]);
+}
+
+function rowHaystack(row) {
+  return `${row.content || ""} ${row.tags || ""} ${row.category || ""} ${row.project_id || ""} ${row.branch_name || ""} ${row.search_text || ""}`.toLowerCase();
+}
+
+function matchedTerms(row, terms) {
+  const haystack = rowHaystack(row);
+  return uniqueValues(terms.filter((term) => haystack.includes(term)));
+}
+
+function rowScopeBoost(row, opts) {
+  const encodedBranch = opts.branch_name ? `branch:${encodeURIComponent(opts.branch_name)}` : "";
+  if (opts.branch_name && (row.branch_name === opts.branch_name || String(row.tags || "").includes(encodedBranch))) return 0.3;
+  if (opts.project_id && row.project_id === opts.project_id) return 0.2;
+  if (row.scope === "global") return 0.03;
+  return 0;
+}
+
+function rowTagBoost(row, terms) {
+  const tags = normalizeTags(row.tags);
+  if (!tags.length || !terms.length) return 0;
+  const hits = tags.filter((tag) => terms.some((term) => tag.toLowerCase().includes(term) || term.includes(tag.toLowerCase())));
+  return Math.min(0.18, hits.length * 0.06);
+}
+
+function typeBoost(row) {
+  return { decision: 0.08, fact: 0.06, rule: 0.04, note: 0.02 }[row.type] || 0;
+}
+
+function termSimilarity(a, b) {
+  const left = new Set(meaningfulTerms(a?.content).slice(0, 80));
+  const right = new Set(meaningfulTerms(b?.content).slice(0, 80));
+  if (!left.size || !right.size) return 0;
+  let overlap = 0;
+  for (const term of left) if (right.has(term)) overlap += 1;
+  return overlap / Math.min(left.size, right.size);
+}
+
+function explainScore(row, matched, opts) {
+  const reasons = [];
+  if (row.branch_name && opts.branch_name && row.branch_name === opts.branch_name) reasons.push("当前分支");
+  else if (row.project_id && opts.project_id && row.project_id === opts.project_id) reasons.push("当前项目");
+  else if (row.scope === "global") reasons.push("全局记忆");
+  if (matched.length) reasons.push(`命中 ${matched.slice(0, 5).join(", ")}`);
+  if (normalizeTags(row.tags).some((tag) => matched.includes(tag.toLowerCase()))) reasons.push("标签匹配");
+  return reasons.join("；") || "FTS/BM25 命中后重排";
+}
+
+function rerankRows(rows, query, opts, limit) {
+  const terms = meaningfulTerms(query);
+  const scored = rows
+    .filter((row) => hasMeaningfulOverlap(row, terms))
+    .map((row) => {
+      const matched = matchedTerms(row, terms);
+      const coverage = matched.length / Math.max(1, Math.min(terms.length, 12));
+      const score = (row.rrf || 0) + coverage * 0.55 + rowScopeBoost(row, opts) + rowTagBoost(row, terms) + typeBoost(row);
+      return {
+        ...row,
+        recall_score: Number(score.toFixed(4)),
+        recall_reason: explainScore(row, matched, opts),
+      };
+    })
+    .sort((a, b) => b.recall_score - a.recall_score || String(b.updated_at).localeCompare(String(a.updated_at)));
+
+  const selected = [];
+  const skipped = [];
+  const topicCounts = new Map();
+  for (const row of scored) {
+    const topic = row.category || normalizeTags(row.tags)[0] || row.type || "default";
+    const repeatedTopic = (topicCounts.get(topic) || 0) >= 2;
+    const tooSimilar = selected.some((item) => termSimilarity(row, item) >= 0.72);
+    if (repeatedTopic || tooSimilar) {
+      skipped.push(row);
+      continue;
+    }
+    selected.push(row);
+    topicCounts.set(topic, (topicCounts.get(topic) || 0) + 1);
+    if (selected.length >= limit) return selected;
+  }
+  return selected.concat(skipped).slice(0, limit);
+}
+
 function rowToMemory(row) {
   if (!row) return null;
   const tags = row.tags != null ? row.tags : row.tags_json;
@@ -311,16 +408,16 @@ export function openStore(dbPath = process.env.MIU_KB_DB || process.env.PKB_DB |
     },
 
     search(query, opts = {}) {
-      const match = ftsQuery(query);
-      if (!match) return [];
       const limit = normalizeLimit(opts.limit, 10, 50);
-      const terms = meaningfulTerms(query);
-      const rows = db.prepare(`
+      const fetchLimit = Math.min(limit * 5, 100);
+      const byId = new Map();
+      const stmt = db.prepare(`
         SELECT m.*, bm25(memories_fts) AS rank
         FROM memories m
         JOIN memories_fts ON m.rowid = memories_fts.rowid
         WHERE memories_fts MATCH ?
           AND m.deleted_at IS NULL
+          AND (? IS NULL OR m.type = ?)
           AND (? IS NULL OR m.scope = ? OR m.scope = 'global')
           AND (? IS NULL OR m.project_id IS NULL OR m.project_id = ?)
           AND (? IS NULL OR m.branch_name IS NULL OR m.branch_name = ? OR m.tags LIKE ?)
@@ -329,19 +426,32 @@ export function openStore(dbPath = process.env.MIU_KB_DB || process.env.PKB_DB |
           rank ASC,
           m.updated_at DESC
         LIMIT ?
-      `).all(
-        match,
-        opts.scope || null,
-        opts.scope === "branch" ? "project" : opts.scope || null,
-        opts.project_id || null,
-        opts.project_id || null,
-        opts.branch_name || null,
-        opts.branch_name || null,
-        opts.branch_name ? `%branch:${encodeURIComponent(opts.branch_name)}%` : null,
-        opts.branch_name || null,
-        Math.min(limit * 3, 100)
-      );
-      return rows.filter((row) => hasMeaningfulOverlap(row, terms)).slice(0, limit).map(rowToMemory);
+      `);
+      for (const [variantIndex, variant] of queryVariants(query).entries()) {
+        const match = ftsQuery(variant);
+        if (!match) continue;
+        const rows = stmt.all(
+          match,
+          opts.type || null,
+          opts.type || null,
+          opts.scope || null,
+          opts.scope === "branch" ? "project" : opts.scope || null,
+          opts.project_id || null,
+          opts.project_id || null,
+          opts.branch_name || null,
+          opts.branch_name || null,
+          opts.branch_name ? `%branch:${encodeURIComponent(opts.branch_name)}%` : null,
+          opts.branch_name || null,
+          fetchLimit
+        );
+        rows.forEach((row, index) => {
+          const current = byId.get(row.id) || { ...row, rrf: 0 };
+          current.rrf += (variantIndex === 0 ? 1.15 : 1) / (60 + index + 1);
+          current.rank = Math.min(Number(current.rank ?? Infinity), Number(row.rank ?? Infinity));
+          byId.set(row.id, current);
+        });
+      }
+      return rerankRows([...byId.values()], query, opts, limit).map(rowToMemory);
     },
 
     recall(query, opts = {}) {
@@ -357,7 +467,7 @@ export function openStore(dbPath = process.env.MIU_KB_DB || process.env.PKB_DB |
         ORDER BY
           CASE WHEN branch_name IS NOT NULL AND branch_name = ? THEN 0 WHEN scope = 'project' THEN 1 ELSE 2 END,
           updated_at DESC
-        LIMIT 8
+        LIMIT 3
       `).all(
         opts.scope || null,
         opts.scope === "branch" ? "project" : opts.scope || null,
@@ -367,7 +477,11 @@ export function openStore(dbPath = process.env.MIU_KB_DB || process.env.PKB_DB |
         opts.branch_name || null,
         opts.branch_name ? `%branch:${encodeURIComponent(opts.branch_name)}%` : null,
         opts.branch_name || null
-      ).map(rowToMemory);
+      ).map((row) => rowToMemory({
+        ...row,
+        recall_score: 1,
+        recall_reason: "固定规则，按范围和更新时间注入",
+      }));
       return { rules, memories: this.search(query, { ...opts, limit }) };
     },
 

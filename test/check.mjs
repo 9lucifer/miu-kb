@@ -59,6 +59,8 @@ try {
   });
   assert.equal(recalled.rules[0].id, rule.id);
   assert.equal(recalled.memories[0].id, fact.id);
+  assert.ok(recalled.memories[0].recall_score > 0);
+  assert.match(recalled.memories[0].recall_reason, /命中|当前项目/);
 
   assert.equal(store.forget(fact.id), true);
   assert.equal(store.search("显式 tab stop").length, 0);
